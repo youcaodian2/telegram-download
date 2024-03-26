@@ -2,12 +2,15 @@ package up
 
 import (
 	"context"
+	"fmt"
+	"github.com/expr-lang/expr"
+	"github.com/expr-lang/expr/vm"
+	"os"
 
 	"github.com/fatih/color"
 	"github.com/go-faster/errors"
 	"github.com/gotd/td/telegram"
 	"github.com/gotd/td/telegram/peers"
-	"github.com/gotd/td/tg"
 	"github.com/spf13/viper"
 	"go.uber.org/multierr"
 
@@ -23,6 +26,8 @@ import (
 
 type Options struct {
 	Chat     string
+	Thread   int
+	To       string
 	Paths    []string
 	Excludes []string
 	Remove   bool
@@ -44,7 +49,7 @@ func Run(ctx context.Context, c *telegram.Client, kvd kv.KV, opts Options) (rerr
 
 	manager := peers.Options{Storage: storage.NewPeers(kvd)}.Build(pool.Default(ctx))
 
-	to, err := resolveDestPeer(ctx, manager, opts.Chat)
+	to, err := resolveDest(ctx, manager, opts.To)
 	if err != nil {
 		return errors.Wrap(err, "get target peer")
 	}
@@ -57,7 +62,7 @@ func Run(ctx context.Context, c *telegram.Client, kvd kv.KV, opts Options) (rerr
 		Client:   pool.Default(ctx),
 		PartSize: viper.GetInt(consts.FlagPartSize),
 		Threads:  viper.GetInt(consts.FlagThreads),
-		Iter:     newIter(files, to, opts.Photo, opts.Remove),
+		Iter:     newIter(files, to, opts.Chat, opts.Thread, opts.Photo, opts.Remove, manager),
 		Progress: newProgress(upProgress),
 	}
 
@@ -69,10 +74,37 @@ func Run(ctx context.Context, c *telegram.Client, kvd kv.KV, opts Options) (rerr
 	return up.Upload(ctx, viper.GetInt(consts.FlagLimit))
 }
 
-func resolveDestPeer(ctx context.Context, manager *peers.Manager, chat string) (peers.Peer, error) {
-	if chat == "" {
-		return manager.FromInputPeer(ctx, &tg.InputPeerSelf{})
+//func resolveDestPeer(ctx context.Context, manager *peers.Manager, chat string) (peers.Peer, error) {
+//	if chat == "" {
+//		return manager.FromInputPeer(ctx, &tg.InputPeerSelf{})
+//	}
+//
+//	return utils.Telegram.GetInputPeer(ctx, manager, chat)
+//}
+
+// resolveDest parses the input string and returns a vm.Program. It can be a CHAT, a text or a file based on expression engine.
+func resolveDest(ctx context.Context, manager *peers.Manager, input string) (*vm.Program, error) {
+	compile := func(i string) (*vm.Program, error) {
+		// we pass empty peer and message to enable type checking
+		return expr.Compile(i, expr.Env(File{}))
 	}
 
-	return utils.Telegram.GetInputPeer(ctx, manager, chat)
+	// default
+	if input == "" {
+		return compile(`""`)
+	}
+
+	// file
+	if exp, err := os.ReadFile(input); err == nil {
+		return compile(string(exp))
+	}
+
+	// chat
+	if _, err := utils.Telegram.GetInputPeer(ctx, manager, input); err == nil {
+		// convert to const string
+		return compile(fmt.Sprintf(`"%s"`, input))
+	}
+
+	// text
+	return compile(input)
 }
