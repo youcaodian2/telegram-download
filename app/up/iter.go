@@ -14,9 +14,20 @@ import (
 	"github.com/iyear/tdl/pkg/utils"
 )
 
+type toEnv struct {
+	File File
+}
+
+func exprToEnv(file *File) toEnv {
+	if file == nil {
+		file = &File{}
+	}
+	return toEnv{File: *file}
+}
+
 type File struct {
-	File  string
-	Thumb string
+	File  string `comment:"File path"`
+	Thumb string `comment:"Thumbnail path"`
 }
 
 type iter struct {
@@ -87,7 +98,7 @@ func (i *iter) Next(ctx context.Context) bool {
 		}
 	} else {
 		// message routing
-		result, err := texpr.Run(i.to, *cur)
+		result, err := texpr.Run(i.to, exprToEnv(cur))
 		if err != nil {
 			i.err = errors.Wrap(err, "message routing")
 			return false

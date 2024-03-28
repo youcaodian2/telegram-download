@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/expr-lang/expr"
 	"github.com/expr-lang/expr/vm"
+	"github.com/iyear/tdl/pkg/texpr"
 	"os"
 
 	"github.com/fatih/color"
@@ -32,9 +33,21 @@ type Options struct {
 	Excludes []string
 	Remove   bool
 	Photo    bool
+	Caption  string
 }
 
 func Run(ctx context.Context, c *telegram.Client, kvd kv.KV, opts Options) (rerr error) {
+	if opts.To == "-" {
+		fg := texpr.NewFieldsGetter(nil)
+
+		fields, err := fg.Walk(exprToEnv(nil))
+		if err != nil {
+			return fmt.Errorf("failed to walk fields: %w", err)
+		}
+
+		fmt.Print(fg.Sprint(fields, true))
+		return nil
+	}
 	files, err := walk(opts.Paths, opts.Excludes)
 	if err != nil {
 		return err
@@ -86,7 +99,7 @@ func Run(ctx context.Context, c *telegram.Client, kvd kv.KV, opts Options) (rerr
 func resolveDest(ctx context.Context, manager *peers.Manager, input string) (*vm.Program, error) {
 	compile := func(i string) (*vm.Program, error) {
 		// we pass empty peer and message to enable type checking
-		return expr.Compile(i, expr.Env(File{}))
+		return expr.Compile(i, expr.Env(exprToEnv(nil)))
 	}
 
 	// default
