@@ -3,9 +3,12 @@ package up
 import (
 	"context"
 	"github.com/expr-lang/expr/vm"
+	"github.com/gotd/td/telegram/message"
+	"github.com/gotd/td/telegram/message/styling"
 	"github.com/gotd/td/telegram/peers"
 	"github.com/iyear/tdl/pkg/logger"
 	"github.com/iyear/tdl/pkg/texpr"
+	"github.com/iyear/tdl/pkg/tstyle"
 	"github.com/mitchellh/mapstructure"
 	"go.uber.org/zap"
 	"os"
@@ -55,6 +58,7 @@ type File struct {
 type iter struct {
 	files   []*File
 	to      *vm.Program
+	caption *vm.Program
 	chat    string
 	topic   int
 	photo   bool
@@ -71,10 +75,11 @@ type dest struct {
 	Thread int
 }
 
-func newIter(files []*File, to *vm.Program, chat string, topic int, photo, remove bool, manager *peers.Manager) *iter {
+func newIter(files []*File, to, caption *vm.Program, chat string, topic int, photo, remove bool, manager *peers.Manager) *iter {
 	return &iter{
 		files:   files,
 		to:      to,
+		caption: caption,
 		chat:    chat,
 		topic:   topic,
 		photo:   photo,
@@ -148,6 +153,34 @@ func (i *iter) Next(ctx context.Context) bool {
 		}
 	}
 
+	result, err := texpr.Run(i.caption, exprEnv(ctx, cur))
+	caption := make([]message.StyledTextOption, 0, 1)
+	if err != nil {
+		i.err = errors.Wrap(err, "caption parse")
+		return false
+	}
+	switch r := result.(type) {
+	case string:
+		caption = append(caption, styling.Plain(r))
+	case []interface{}:
+		for _, v := range r {
+			switch v := v.(type) {
+			case string:
+				caption = append(caption, styling.Plain(v))
+			case map[string]interface{}:
+				styledText, err := tstyle.ParseToStyledText(v)
+				if err != nil {
+					i.err = errors.Wrap(err, "parse styled text")
+					return false
+				}
+				caption = append(caption, *styledText)
+			}
+		}
+	default:
+		i.err = errors.Errorf("caption must return string or array of object: %T", result)
+		return false
+	}
+
 	var thumb *uploaderFile = nil
 	// has thumbnail
 	if cur.Thumb != "" {
@@ -175,6 +208,7 @@ func (i *iter) Next(ctx context.Context) bool {
 		file:    &uploaderFile{File: f, size: stat.Size()},
 		thumb:   thumb,
 		to:      to,
+		caption: caption,
 		thread:  thread,
 		asPhoto: i.photo,
 		remove:  i.remove,
