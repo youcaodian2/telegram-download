@@ -4,9 +4,13 @@ import (
 	"context"
 	"github.com/expr-lang/expr/vm"
 	"github.com/gotd/td/telegram/peers"
+	"github.com/iyear/tdl/pkg/logger"
 	"github.com/iyear/tdl/pkg/texpr"
 	"github.com/mitchellh/mapstructure"
+	"go.uber.org/zap"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/gabriel-vasile/mimetype"
 	"github.com/go-faster/errors"
@@ -15,19 +19,37 @@ import (
 )
 
 type toEnv struct {
-	File File
+	File      string `comment:"File path"`
+	Thumb     string `comment:"Thumbnail path"`
+	Filename  string `comment:"Filename"`
+	Extension string `comment:"File extension"`
+	Mime      string `comment:"File mime type"`
 }
 
-func exprToEnv(file *File) toEnv {
+func exprToEnv(ctx context.Context, file *File) toEnv {
 	if file == nil {
-		file = &File{}
+		return toEnv{}
 	}
-	return toEnv{File: *file}
+
+	var extension = filepath.Ext(file.File)
+	var filename = strings.TrimSuffix(filepath.Base(file.File), extension)
+	var mime, err = mimetype.DetectFile(file.File)
+	if err != nil {
+		mime = &mimetype.MIME{}
+		logger.From(ctx).Error("detect file mime", zap.Error(err))
+	}
+	return toEnv{
+		File:      file.File,
+		Thumb:     file.Thumb,
+		Filename:  filename,
+		Extension: extension,
+		Mime:      mime.String(),
+	}
 }
 
 type File struct {
-	File  string `comment:"File path"`
-	Thumb string `comment:"Thumbnail path"`
+	File  string
+	Thumb string
 }
 
 type iter struct {
@@ -98,7 +120,7 @@ func (i *iter) Next(ctx context.Context) bool {
 		}
 	} else {
 		// message routing
-		result, err := texpr.Run(i.to, exprToEnv(cur))
+		result, err := texpr.Run(i.to, exprToEnv(ctx, cur))
 		if err != nil {
 			i.err = errors.Wrap(err, "message routing")
 			return false
