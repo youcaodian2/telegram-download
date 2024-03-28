@@ -18,7 +18,7 @@ import (
 	"github.com/iyear/tdl/pkg/utils"
 )
 
-type toEnv struct {
+type Env struct {
 	File      string `comment:"File path"`
 	Thumb     string `comment:"Thumbnail path"`
 	Filename  string `comment:"Filename"`
@@ -26,9 +26,9 @@ type toEnv struct {
 	Mime      string `comment:"File mime type"`
 }
 
-func exprToEnv(ctx context.Context, file *File) toEnv {
+func exprEnv(ctx context.Context, file *File) Env {
 	if file == nil {
-		return toEnv{}
+		return Env{}
 	}
 
 	var extension = filepath.Ext(file.File)
@@ -38,7 +38,7 @@ func exprToEnv(ctx context.Context, file *File) toEnv {
 		mime = &mimetype.MIME{}
 		logger.From(ctx).Error("detect file mime", zap.Error(err))
 	}
-	return toEnv{
+	return Env{
 		File:      file.File,
 		Thumb:     file.Thumb,
 		Filename:  filename,
@@ -120,7 +120,7 @@ func (i *iter) Next(ctx context.Context) bool {
 		}
 	} else {
 		// message routing
-		result, err := texpr.Run(i.to, exprToEnv(ctx, cur))
+		result, err := texpr.Run(i.to, exprEnv(ctx, cur))
 		if err != nil {
 			i.err = errors.Wrap(err, "message routing")
 			return false

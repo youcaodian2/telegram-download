@@ -40,7 +40,7 @@ func Run(ctx context.Context, c *telegram.Client, kvd kv.KV, opts Options) (rerr
 	if opts.To == "-" {
 		fg := texpr.NewFieldsGetter(nil)
 
-		fields, err := fg.Walk(exprToEnv(nil, nil))
+		fields, err := fg.Walk(exprEnv(nil, nil))
 		if err != nil {
 			return fmt.Errorf("failed to walk fields: %w", err)
 		}
@@ -99,7 +99,7 @@ func Run(ctx context.Context, c *telegram.Client, kvd kv.KV, opts Options) (rerr
 func resolveDest(ctx context.Context, manager *peers.Manager, input string) (*vm.Program, error) {
 	compile := func(i string) (*vm.Program, error) {
 		// we pass empty peer and message to enable type checking
-		return expr.Compile(i, expr.Env(exprToEnv(nil, nil)))
+		return expr.Compile(i, expr.Env(exprEnv(nil, nil)))
 	}
 
 	// default
