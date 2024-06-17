@@ -12,13 +12,6 @@ import (
 
 func walk(paths, includes, excludes []string) ([]*file, error) {
 	files := make([]*file, 0)
-	//excludesMap := map[string]struct{}{
-	//	consts.UploadThumbExt: {}, // ignore thumbnail files
-	//}
-	//
-	//for _, exclude := range excludes {
-	//	excludesMap[exclude] = struct{}{}
-	//}
 
 	includesMap := filterMap.New(includes, fsutil.AddPrefixDot)
 	excludesMap := filterMap.New(excludes, fsutil.AddPrefixDot)
