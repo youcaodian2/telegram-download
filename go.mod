@@ -18,12 +18,12 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.1
 	github.com/gotd/contrib v0.20.0
-	github.com/gotd/td v0.110.1
+	github.com/gotd/td v0.113.0
 	github.com/iancoleman/strcase v0.3.0
 	github.com/ivanpirog/coloredcobra v1.0.1
 	github.com/iyear/tdl/core v0.17.4
 	github.com/jedib0t/go-pretty/v6 v6.5.0
-	github.com/klauspost/compress v1.17.10
+	github.com/klauspost/compress v1.17.11
 	github.com/kopoli/go-terminal-size v0.0.0-20170219200355-5c97524c8b54
 	github.com/mattn/go-runewidth v0.0.16
 	github.com/mitchellh/mapstructure v1.5.0
@@ -34,7 +34,7 @@ require (
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.19.0
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 	github.com/tidwall/gjson v1.18.0
 	go.etcd.io/bbolt v1.3.10
 	go.uber.org/multierr v1.11.0
