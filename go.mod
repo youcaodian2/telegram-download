@@ -22,7 +22,7 @@ require (
 	github.com/iancoleman/strcase v0.3.0
 	github.com/ivanpirog/coloredcobra v1.0.1
 	github.com/iyear/tdl/core v0.17.4
-	github.com/jedib0t/go-pretty/v6 v6.5.0
+	github.com/jedib0t/go-pretty/v6 v6.6.5
 	github.com/klauspost/compress v1.17.10
 	github.com/kopoli/go-terminal-size v0.0.0-20170219200355-5c97524c8b54
 	github.com/mattn/go-runewidth v0.0.16
@@ -91,10 +91,10 @@ require (
 	golang.org/x/crypto v0.27.0 // indirect
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56 // indirect
 	golang.org/x/net v0.29.0 // indirect
-	golang.org/x/sync v0.8.0 // indirect
+	golang.org/x/sync v0.10.0 // indirect
 	golang.org/x/sys v0.25.0 // indirect
 	golang.org/x/term v0.24.0 // indirect
-	golang.org/x/text v0.18.0 // indirect
+	golang.org/x/text v0.21.0 // indirect
 	golang.org/x/tools v0.24.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1 // indirect
